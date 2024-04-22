@@ -1,13 +1,40 @@
 &spi1 {
     status = "disabled";
 };
+&qspi {
+    status = "disabled";
+};
+&led0 {
+    status = "disabled";
+
+}
+;&led1 {
+    status = "disabled";
+
+};
+/*
+&spi2_default {
+    psels = <NRF_PSEL(SPIM_SCK, 0, 13)>,
+            <NRF_PSEL(SPIM_MOSI, 0, 15)>,
+            <NRF_PSEL(SPIM_MISO, 0, 16)>;
+};
+
+&spi2_sleep {
+    psels = <NRF_PSEL(SPIM_SCK, 0, 13)>,
+            <NRF_PSEL(SPIM_MOSI, 0, 15)>,
+            <NRF_PSEL(SPIM_MISO, 0, 16)>;
+};
+ */
 &spi2 {
     compatible = "nordic,nrf-spi";
     status = "okay";
     cs-gpios = <&gpio0 29 GPIO_ACTIVE_LOW>;
+
     pinctrl-0 = <&spi1_default>;
     pinctrl-1 = <&spi1_sleep>;
     pinctrl-names = "default", "sleep";
+
+
     gendev: gendev@0 {
         compatible = "vnd,spi-device";
         reg = <0>;

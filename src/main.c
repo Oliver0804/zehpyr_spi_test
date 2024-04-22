@@ -15,6 +15,9 @@
 
 #include <zephyr/drivers/spi.h>
 #include <zephyr/logging/log.h>
+
+LOG_MODULE_REGISTER(main, LOG_LEVEL_DBG);
+
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>
@@ -314,7 +317,8 @@ void main(void)
 {
 	int blink_status = 0;
 	int err;
-
+	LOG_INF("Connected");
+	printk("Starting Bluetooth Peripheral LBS example\n");
 	printk("Starting Bluetooth Peripheral LBS example\n");
 
 	err = dk_leds_init();
@@ -390,39 +394,53 @@ void main(void)
 		printk("Device spi ready\n");
 	}
 
-	uint32_t max_read = 2;
-	uint32_t max_write = 32;
-	// uint8_t rxbuff[max_read];
-	// uint8_t txbuff[max_write];
-	uint8_t data = 0xAA;
 	uint8_t tx_data[] = {0x00}; // 创建包含单个字节的数组
 	uint8_t rx_data[] = {0x00}; // 创建包含单个字节的数组
 	for (;;)
 	{
+
 		dk_set_led(RUN_STATUS_LED, (++blink_status) % 2);
 		k_sleep(K_MSEC(1));
-		spi_master_transfer(UB0_REG_DEVICE_CONFIG & ICM_WRITE_BIT_MASK, (uint8_t[]){0x00}, 1, NULL, 0);
+		spi_master_transfer(UB0_REG_DEVICE_CONFIG & ICM_WRITE_BIT_MASK, (uint8_t[]){0x01}, 1, NULL, 0);
 		spi_master_transfer(WHO_AM_I_REG | ICM_READ_BIT_MASK, NULL, 0, rx_data, 1);
-		printf("WHOAMI 0x%02x \n", rx_data[0]);
+		printk("WHOAMI 0x%02x \n", rx_data[0]);
+
 		// MGMT0 CONFIG
-		spi_master_transfer(UB0_REG_PWR_MGMT0 & ICM_WRITE_BIT_MASK, (uint8_t[]){0x1F}, 1, NULL, 0); // UB0_REG_PWR_MGMT0 W 0x0F
+		spi_master_transfer(UB0_REG_PWR_MGMT0 & ICM_WRITE_BIT_MASK, (uint8_t[]){0x0F}, 1, NULL, 0); // UB0_REG_PWR_MGMT0 W 0x0F
 		spi_master_transfer(UB0_REG_PWR_MGMT0 | ICM_READ_BIT_MASK, NULL, 0, rx_data, 1);
-		printf("MGMT0 0x%02x \n", rx_data[0]);
-		// ACC CONFIG
-		spi_master_transfer(UB0_REG_ACCEL_CONFIG0 & ICM_WRITE_BIT_MASK, (uint8_t[]){0x00}, 1, NULL, 0); // UB0_REG_PWR_MGMT0 W 0x0F
+		printk("MGMT0 0x%02x \n", rx_data[0]);
+
+		// ACC CONFIG0
+		spi_master_transfer(UB0_REG_ACCEL_CONFIG0 & ICM_WRITE_BIT_MASK, (uint8_t[]){0x07}, 1, NULL, 0); // UB0_REG_PWR_MGMT0 W 0x0F
 		spi_master_transfer(UB0_REG_ACCEL_CONFIG0 | ICM_READ_BIT_MASK, NULL, 0, rx_data, 1);
-		printf("ACLLEL_CONFIG 0x%02x \n", rx_data[0]);
-		// GYRO CONFIG
-		spi_master_transfer(UB0_REG_GYRO_CONFIG0 & ICM_WRITE_BIT_MASK, (uint8_t[]){0x00}, 1, NULL, 0); // UB0_REG_PWR_MGMT0 W 0x0F
+		printk("ACLLEL_CONFIG 0x%02x \n", rx_data[0]);
+
+		// ACC CONFIG1
+		spi_master_transfer(UB0_REG_ACCEFL_CONFIG1 & ICM_WRITE_BIT_MASK, (uint8_t[]){0x14}, 1, NULL, 0); // UB0_REG_PWR_MGMT0 W 0x0F
+		spi_master_transfer(UB0_REG_ACCEFL_CONFIG1 | ICM_READ_BIT_MASK, NULL, 0, rx_data, 1);
+		printk("GYRO CONFIG1 0x%02x \n", rx_data[0]);
+
+		// GYRO CONFIG0
+		spi_master_transfer(UB0_REG_GYRO_CONFIG0 & ICM_WRITE_BIT_MASK, (uint8_t[]){0x06}, 1, NULL, 0); // UB0_REG_PWR_MGMT0 W 0x0F
 		spi_master_transfer(UB0_REG_GYRO_CONFIG0 | ICM_READ_BIT_MASK, NULL, 0, rx_data, 1);
-		printf("ACLLEL_CONFIG 0x%02x \n", rx_data[0]);
-		k_msleep(1000);
+		printk("GYRO CONFIG0 0x%02x \n", rx_data[0]);
+
+		// GYRO CONFIG1
+		spi_master_transfer(UB0_REG_GYRO_CONFIG1 & ICM_WRITE_BIT_MASK, (uint8_t[]){0x2A}, 1, NULL, 0); // UB0_REG_PWR_MGMT0 W 0x0F
+		spi_master_transfer(UB0_REG_GYRO_CONFIG1 | ICM_READ_BIT_MASK, NULL, 0, rx_data, 1);
+		printk("GYRO CONFIG1 0x%02x \n", rx_data[0]);
+
+		// GYRO_ACCEL_CONFIG
+		spi_master_transfer(UB0_REG_GYRO_ACCEL_CONFIG0 & ICM_WRITE_BIT_MASK, (uint8_t[]){0x22}, 1, NULL, 0); // UB0_REG_PWR_MGMT0 W 0x0F
+		spi_master_transfer(UB0_REG_GYRO_ACCEL_CONFIG0 | ICM_READ_BIT_MASK, NULL, 0, rx_data, 1);
+		printk("GYRO_ACCEL_CONFIG 0x%02x \n", rx_data[0]);
+		// k_msleep(1000);
 		while (1)
 		{
 			spi_master_transfer(UB0_REG_TEMP_DATA1 | ICM_READ_BIT_MASK, NULL, 0, rx_data, 14);
 			int16_t temp_raw = (int16_t)((rx_data[0] << 8) | rx_data[1]); // 将两个字节合并为一个 16 位整数
 			double temp_c = temp_raw / 132.48 + 25;						  // 计算温度值，保持为浮点数以保持精度
-			printf("TEMP= %.2f \n", temp_c);							  // 以浮点格式打印温度值			printf("ACCEL_DATA_X1 0x%02x \n", rx_data[2]);
+			printk("T= %.2f ", temp_c);									  // 以浮点格式打印温度值			printk("ACCEL_DATA_X1 0x%02x \n", rx_data[2]);
 
 			int16_t acc_x = (int16_t)((rx_data[2] << 8) | rx_data[3]);
 			int16_t acc_y = (int16_t)((rx_data[4] << 8) | rx_data[5]);
@@ -431,38 +449,13 @@ void main(void)
 			int16_t gyro_x = (int16_t)((rx_data[8] << 8) | rx_data[9]);
 			int16_t gyro_y = (int16_t)((rx_data[10] << 8) | rx_data[11]);
 			int16_t gyro_z = (int16_t)((rx_data[12] << 8) | rx_data[13]);
-			printf("ACC_X= %d \n", acc_x);
-			printf("ACC_Y= %d \n", acc_y);
-			printf("ACC_Z= %d \n", acc_z);
-			printf("GYRO_X= %d \n", gyro_x);
-			printf("GYRO_Y= %d \n", gyro_y);
-			printf("GYRO_Z= %d \n", gyro_z);
-			k_msleep(500);
-			/*
-			int16_t acc_x = 0;
-			int16_t acc_x_test = 0;
-			// UB0_REG_ACCEL_DATA_X1 ACC HIGH
-			spi_master_transfer(UB0_REG_ACCEL_DATA_X1 | ICM_READ_BIT_MASK, NULL, 0, rx_data, 1);
-			printk("0x%02x \n", rx_data[0]);
-			//  UB0_REG_ACCEL_DATA_X1 ACC LOW
-			acc_x = rx_data[0] << 8;
-			spi_master_transfer(UB0_REG_ACCEL_DATA_X0 | ICM_READ_BIT_MASK, NULL, 0, rx_data, 1);
-			printk("0x%02x \n", rx_data[0]);
-			acc_x |= rx_data[0];
-			// caul acc
-			printk("acc_x\t\t %d \n", acc_x);
-			printf("====================================\n");
-			spi_master_transfer(UB0_REG_ACCEL_DATA_X1 | ICM_READ_BIT_MASK, NULL, 0, rx_data, 2);
-			printk("0x%02x \n", rx_data[0]);
-			printk("0x%02x \n", rx_data[1]);
-			printk("acc_x temp\t %d \n", (int16_t)((rx_data[0] << 8) | rx_data[1]));
-			k_msleep(500);
-			// spi_master_transfer(RESET_REG & ICM_WRITE_BIT_MASK, 0x01, 1, NULL, 0);
-			// k_msleep(1000);
-			*/
+			printk("\tAX= %d ", acc_x);
+			printk("\tAY= %d ", acc_y);
+			printk("\tAZ= %d ", acc_z);
+			printk("\tGX= %d ", gyro_x);
+			printk("\tGY= %d ", gyro_y);
+			printk("\tGZ= %d \n", gyro_z);
+			k_msleep(5);
 		}
-		// spi_write_dt(&spispec, &tx_set);
-
-		printk("\n");
 	}
 }
